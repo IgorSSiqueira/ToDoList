@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:hive/hive.dart';
 import 'package:to_do_list/data/database.dart';
 import 'package:to_do_list/util/task_list.dart';
@@ -16,10 +17,7 @@ class _HomeState extends State<Home> {
   final _controller = TextEditingController();
   final _myBox = Hive.box('mybox');
   ToDoDataBase db = ToDoDataBase();
-
-  /*List<MyTasks> myTaskList = [
-    MyTasks('primeira tarefa', false),
-  ];*/
+  final myFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -32,8 +30,15 @@ class _HomeState extends State<Home> {
   }
 
   @override
+  void dispose() {
+    myFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.cyan[50],
       appBar: AppBar(
         title: const Center(
           child: Text("To Do"),
@@ -43,31 +48,47 @@ class _HomeState extends State<Home> {
       body: Stack(
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.8,
+            height: MediaQuery.of(context).size.height * 0.95,
             child: ListView.builder(
               itemCount: db.toDoList.length,
               itemBuilder: (context, index) {
                 return Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: ListTile(
-                    leading: Checkbox(
-                      onChanged: (value) => {
-                        setState(() {
-                          db.toDoList[index][1] = !db.toDoList[index][1]!;
-                        }),
-                      },
-                      value: db.toDoList[index][1],
-                    ),
-                    title: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Row(
+                  padding: const EdgeInsets.only(left: 15, right: 15, top: 5),
+                  child: Card(
+                    color: Colors.cyan[100],
+                    child: ListTile(
+                      leading: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.02,
+                        child: Checkbox(
+                          onChanged: (taskValue) => {
+                            setState(() {
+                              db.toDoList[index][1] = !db.toDoList[index][1]!;
+                            }),
+                          },
+                          value: db.toDoList[index][1],
+                        ),
+                      ),
+                      title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(db.toDoList[index][0]),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Text(
+                                db.toDoList[index][0],
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    decoration: db.toDoList[index][1]
+                                        ? TextDecoration.lineThrough
+                                        : TextDecoration.none),
+                              ),
+                            ),
+                          ),
                           IconButton(
                             icon: const Icon(
                               Icons.delete,
-                              color: Colors.red,
+                              color: Colors.black87,
                             ),
                             onPressed: () {
                               setState(() {
@@ -75,7 +96,7 @@ class _HomeState extends State<Home> {
                               });
                               db.updateDataBase();
                             },
-                          ),
+                          )
                         ],
                       ),
                     ),
@@ -88,13 +109,16 @@ class _HomeState extends State<Home> {
             alignment: Alignment.bottomCenter,
             child: SingleChildScrollView(
               reverse: true,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                      child: Padding(
-                    padding: const EdgeInsets.fromLTRB(15, 5, 8, 8),
-                    child: TextField(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(width: 15),
+                    Expanded(
+                        child: TextField(
+                      focusNode: myFocusNode,
                       controller: _controller,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
@@ -102,29 +126,31 @@ class _HomeState extends State<Home> {
                         filled: true,
                         fillColor: Colors.white,
                       ),
-                    ),
-                  )),
-                  SizedBox(
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_controller.text != '') {
-                          setState(() {
-                            db.toDoList.add([_controller.text, false]);
-                            db.updateDataBase();
-                            _controller.text = '';
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.cyan,
+                    )),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_controller.text != '') {
+                            setState(() {
+                              db.toDoList.add([_controller.text, false]);
+                              db.updateDataBase();
+                              _controller.text = '';
+                              myFocusNode.unfocus();
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.cyan,
+                        ),
+                        child: const Center(child: Icon(Icons.add)),
                       ),
-                      child: const Center(child: Icon(Icons.add)),
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                ],
+                    const SizedBox(width: 15),
+                  ],
+                ),
               ),
             ),
           ),

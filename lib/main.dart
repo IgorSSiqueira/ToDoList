@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
       title: 'To Do List',
       debugShowCheckedModeBanner: false,
       home: Home(),
+      //theme:
     );
   }
 }
