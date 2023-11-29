@@ -64,6 +64,7 @@ class _HomeState extends State<Home> {
                             setState(() {
                               db.toDoList[index][1] = !db.toDoList[index][1]!;
                             }),
+                            db.updateDataBase(),
                           },
                           value: db.toDoList[index][1],
                         ),
